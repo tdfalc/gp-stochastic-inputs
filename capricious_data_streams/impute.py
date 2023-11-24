@@ -19,7 +19,7 @@ class Imputer:
         self.y = y
         self.indices = np.arange(self.X.shape[1])
         self._noise_precisions = {}
-        self.__init_noise_precisions()
+        self._init_noise_precisions()
 
     def _init_noise_precisions(self):
         # As we use here only a linear kernel with additive noise, we can initialize
@@ -32,7 +32,7 @@ class Imputer:
                 X, y = self.X[:, c], self.X[:, i]
                 self._noise_precisions[(c, i)] = mle_precision(X, y)
 
-    def _mean(self, *i: int):
+    def _mean(self, i: int, *_):
         return np.mean(self.X[:, i]), 0
 
     def _ols(self, i: int, mean: np.ndarray, not_missing: np.ndarray):

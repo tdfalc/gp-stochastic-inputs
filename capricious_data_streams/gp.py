@@ -28,16 +28,16 @@ class LinearGP:
         kernel_train = self.kernel_fn(X_obs, X_obs)
         kernel_train += noise_variance * np.eye(len(X_obs))
         # Kernel of observations vs. query points
-        kernel_train_test = self.kernel_fn(query_mean, X_obs)
+        kernel_train_test = self.kernel_fn(X_obs, query_mean)
         # Kernel of query points
-        kernel_test = self.kernel_fn(query_mean, X_obs)
+        kernel_test = self.kernel_fn(query_mean, query_mean)
         kernel_test += noise_variance * np.eye(len(query_mean))
         # Compute posterior
         solved = (np.linalg.inv(kernel_train) @ kernel_train_test).T
         mean = solved @ y_obs
         covariance = kernel_test - solved @ kernel_train_test
         # For now we are only interested in the diagonal
-        sdev = covariance.diagonal().reshape(-1, 1)
+        sdev = np.sqrt(covariance.diagonal().reshape(-1, 1))
         return mean, sdev
 
     def posterior(
@@ -46,7 +46,7 @@ class LinearGP:
         y_obs: np.ndarray,
         query_mean: np.ndarray,
         query_covariance: np.ndarray = None,
-    ):
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Compute Gaussian Process posterior moments with possibly noisy query points.
 
         Args:
