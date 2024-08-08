@@ -2,22 +2,29 @@ from typing import Tuple
 
 import numpy as np
 
-from utils import mle_precision
+
+def ols_solution(X: np.ndarray, y: np.ndarray):
+    return np.linalg.inv(X.T @ X) @ X.T @ y
+
+
+def mle_precision(X: np.ndarray, y: np.ndarray):
+    return 1 / np.square(X @ ols_solution(X, y) - y).mean()
 
 
 class LinearGP:
     def __init__(self, noise_precision: float = None):
         self.noise_precision = noise_precision
 
-    def _amplitude(self, X: np.ndarray):
+    def _amplitude(self, X: np.ndarray) -> np.ndarray:
         return np.eye(X.shape[1]) / 1e-5
 
-    def kernel_fn(self, X: np.ndarray, Z: np.ndarray):
+    def kernel_fn(self, X: np.ndarray, Z: np.ndarray) -> np.ndarray:
         return X @ self._amplitude(X) @ Z.T
 
-    def _posterior_noise_precision(self, X: np.ndarray, y: np.ndarray):
+    def _posterior_noise_precision(self, X: np.ndarray, y: np.ndarray) -> float:
         if self.noise_precision is None:
             return mle_precision(X, y)
+
         return self.noise_precision
 
     def _noise_free_posterior(
@@ -68,6 +75,7 @@ class LinearGP:
             # to avoid unecessary computations (i.e., we would get the same result
             # assuming the covariance was a zero matrix)
             return mean, sdev
+        
         # Kernel of the observations
         kernel_train = self.kernel_fn(X_obs, X_obs)
         kernel_train += noise_variance * np.eye(len(X_obs))
